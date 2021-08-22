@@ -16,14 +16,19 @@ protocol MenuViewDelegate: AnyObject {
 class MenuView: UIView {
     weak var delegate: MenuViewDelegate?
     
-    var items: [String] = ["Starters", "Rotis", "Biryani", "Rice", "Desserts", "Starters", "Rotis", "Biryani", "Rice", "Desserts"]
+    var items: [String] = [] {
+        didSet {
+            if oldValue != items {
+                updateButtons()
+            }
+        }
+    }
     
-    var selectorWidth: NSLayoutConstraint = NSLayoutConstraint()
-    var selectorLeftAnchor: NSLayoutConstraint = NSLayoutConstraint()
-    private var buttonsArray: [UIButton] = []
+    private var selectorWidth: NSLayoutConstraint = NSLayoutConstraint()
+    private var selectorLeftAnchor: NSLayoutConstraint = NSLayoutConstraint()
     private var currentSelectedButton: UIButton = UIButton()
     
-    var topView: UIView = {
+    private var topView: UIView = {
         let view: UIView = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = UIColor.white
@@ -33,7 +38,7 @@ class MenuView: UIView {
         return view
     }()
     
-    var scrollView: UIScrollView = {
+    private var scrollView: UIScrollView = {
         let scrollView: UIScrollView = UIScrollView()
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.showsVerticalScrollIndicator = false
@@ -42,14 +47,14 @@ class MenuView: UIView {
         return scrollView
     }()
     
-    var mainView: UIView = {
+    private var mainView: UIView = {
         let view: UIView = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         
         return view
     }()
     
-    var stackView: UIStackView = {
+    private var stackView: UIStackView = {
         let stackView:UIStackView = UIStackView()
         stackView.axis = .horizontal
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -59,7 +64,7 @@ class MenuView: UIView {
         return stackView
     }()
     
-    var selectorView: UIView = {
+    private var selectorView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = UIColor.red
@@ -79,44 +84,21 @@ class MenuView: UIView {
         setUpUI()
     }
     
-    func setUpUI() {
+    private func setUpUI() {
         addSubViews()
         addConstraints()
         scrollView.delegate = self
     }
     
-    func addSubViews() {
+    private func addSubViews() {
         self.addSubview(topView)
         topView.addSubview(scrollView)
         scrollView.addSubview(mainView)
         mainView.addSubview(stackView)
         topView.addSubview(selectorView)
-        
-        
-        for (index, item) in items.enumerated() {
-            let button = UIButton()
-            button.setTitle(item, for: .normal)
-            button.setTitleColor(UIColor.black, for: .normal)
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 17)
-            button.titleLabel?.textAlignment = .center
-            button.addTarget(self, action: #selector(itemTapped(_:)), for: .touchUpInside)
-            button.tag = index
-            
-            let width = widthOfString(text: item, usingFont: UIFont.systemFont(ofSize: 17))
-            button.widthAnchor.constraint(equalToConstant: width+10).isActive = true
-            
-            if index == 0 {
-                button.setTitleColor(UIColor.red, for: .normal)
-                button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 17)
-                
-                currentSelectedButton = button
-            }
-            
-            stackView.addArrangedSubview(button)
-        }
     }
     
-    func addConstraints() {
+    private func addConstraints() {
         topView.leftAnchor.constraint(equalTo: self.leftAnchor, constant: -5).isActive = true
         topView.topAnchor.constraint(equalTo: self.topAnchor, constant: 0).isActive = true
         topView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: 0).isActive = true
@@ -140,19 +122,42 @@ class MenuView: UIView {
         selectorLeftAnchor = selectorView.leftAnchor.constraint(equalTo: mainView.leftAnchor, constant: -2)
         selectorLeftAnchor.isActive = true
         selectorView.bottomAnchor.constraint(equalTo: topView.bottomAnchor, constant: 0).isActive = true
-        let width = widthOfString(text: items[0], usingFont: UIFont.boldSystemFont(ofSize: 17))
-        selectorWidth = selectorView.widthAnchor.constraint(equalToConstant: width+4)
+        selectorWidth = selectorView.widthAnchor.constraint(equalToConstant: 0)
         selectorWidth.isActive = true
         selectorView.heightAnchor.constraint(equalToConstant: 3.0).isActive = true
     }
     
-    func widthOfString(text: String, usingFont font: UIFont) -> CGFloat {
+    private func updateButtons() {
+        for (index, item) in items.enumerated() {
+            let button = UIButton()
+            button.setTitle(item, for: .normal)
+            button.setTitleColor(UIColor.black, for: .normal)
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 17)
+            button.titleLabel?.textAlignment = .center
+            button.addTarget(self, action: #selector(itemTapped(_:)), for: .touchUpInside)
+            button.tag = index
+            
+            let width = widthOfString(text: item, usingFont: UIFont.systemFont(ofSize: 17))
+            button.widthAnchor.constraint(equalToConstant: width+10).isActive = true
+            
+            if index == 0 {
+                button.setTitleColor(UIColor.red, for: .normal)
+                button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 17)
+                
+                currentSelectedButton = button
+            }
+            
+            stackView.addArrangedSubview(button)
+        }
+    }
+    
+    private func widthOfString(text: String, usingFont font: UIFont) -> CGFloat {
         let fontAttributes = [NSAttributedString.Key.font: font]
         let size = text.size(withAttributes: fontAttributes)
         return size.width
     }
     
-    @objc func itemTapped(_ sender: UIButton) {
+    @objc private func itemTapped(_ sender: UIButton) {
         print("item tapped ", items[sender.tag])
         
         currentSelectedButton.setTitleColor(UIColor.black, for: .normal)
